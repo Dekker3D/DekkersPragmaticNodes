@@ -19,6 +19,7 @@ end
 
 -- New code starts here
 
+-- Current unused, possibly not relevant since boolean inputs can be a dropdown menu in an instruction. Those can't fit in a register, though.
 local function ReadBooleanFromRegister(reg)
 	local val = GetId(reg)
 	if val ~= nil then
@@ -32,27 +33,27 @@ local function ReadBooleanFromRegister(reg)
 		if num < 0 then return false end
 	end
 
-	return nil -- Dunno, man.
+	return nil -- Dunno, man. Best to do explicit == true/false/nil comparisons instead of relying on the implicit "if (ReadBooleanFromRegister(blah))"
 end
 
--- Now returns move goal
+-- Now returns move goal.
 data.instructions.dpn_is_moving =
 {
 	func = function(comp, state, cause, not_moving, path_blocked, no_result, in_unit, out_coord)
 		local entity = GetSeenEntityOrSelf(comp, state, in_unit)
-		if not entity then
+		if not entity then -- This shouldn't happen unless a behaviour is called from a non-entity but hey sure, defensive coding!
 			state.counter = no_result
 			Set(comp, state, out_coord, { coord = nil })
 			return
 		end
 		if entity.state_path_blocked then
 			state.counter = path_blocked
-			Set(comp, state, out_coord, { coord = entity.location })
+			Set(comp, state, out_coord, { coord = entity.move_goal })
 			return
 		end
 		if not entity.is_moving then
 			state.counter = not_moving
-			Set(comp, state, out_coord, { coord = entity.location })
+			Set(comp, state, out_coord, { coord = entity.location }) -- Should be same as move_goal, right? Might be best to just do move_goal instead?
 			return
 		end
 		Set(comp, state, out_coord, { coord = entity.move_goal })
@@ -80,6 +81,7 @@ local function GetCoordFromArg(comp, state, arg)
 	end
 end
 
+-- Now takes coords and not just entities.
 data.instructions.dpn_is_same_grid =
 {
 	func = function(comp, state, cause, in_unit1, in_unit2, exec_diff)
